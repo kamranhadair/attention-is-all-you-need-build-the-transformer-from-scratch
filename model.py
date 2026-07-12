@@ -404,8 +404,22 @@ def softmax_attention_weights(scores):
     
     return attn_weights
 
-# Step 21 - apply_attention_weights_to_values (not yet solved)
-# TODO: implement
+# Step 21 - apply_attention_weights_to_values
+import torch
+
+def apply_attention_weights_to_values(attention_weights, value):
+    """
+    Combine attention weights with the value tensor to produce context vectors.
+
+    Args:
+        attention_weights (torch.Tensor): Attention weights of shape (..., Lq, Lk).
+        value (torch.Tensor): Value tensor of shape (..., Lk, d_v).
+
+    Returns:
+        torch.Tensor: Context tensor of shape (..., Lq, d_v).
+    """
+    # Batched matrix multiplication over the last two dimensions
+    return torch.matmul(attention_weights, value)
 
 # Step 22 - scaled_dot_product_attention (not yet solved)
 # TODO: implement
