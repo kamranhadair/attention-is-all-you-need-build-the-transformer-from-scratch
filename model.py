@@ -308,8 +308,22 @@ def build_causal_mask(seq_len):
     # Reshape to (1, 1, seq_len, seq_len) for broadcasting with attention scores (B, H, L, L)
     return mask.unsqueeze(0).unsqueeze(0)
 
-# Step 16 - combine_padding_and_causal_masks (not yet solved)
-# TODO: implement
+# Step 16 - combine_padding_and_causal_masks
+import torch
+
+def combine_padding_and_causal_masks(padding_mask, causal_mask):
+    """
+    Fuse a padding mask and a causal mask into a single decoder mask.
+
+    Args:
+        padding_mask (torch.BoolTensor): Shape (B, 1, 1, L), True for real tokens.
+        causal_mask (torch.BoolTensor): Shape (1, 1, L, L), True for allowed causal attention.
+
+    Returns:
+        torch.BoolTensor: Shape (B, 1, L, L), True only at positions allowed by BOTH masks.
+    """
+    # Logical AND automatically broadcasts (B, 1, 1, L) & (1, 1, L, L) -> (B, 1, L, L)
+    return padding_mask & causal_mask
 
 # Step 17 - compute_raw_attention_scores (not yet solved)
 # TODO: implement
