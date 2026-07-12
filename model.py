@@ -570,8 +570,34 @@ def project_to_query_key_value(x, w_q, b_q, w_k, b_k, w_v, b_v):
     
     return q, k, v
 
-# Step 28 - split_qkv_into_heads (not yet solved)
-# TODO: implement
+# Step 28 - split_qkv_into_heads
+import torch
+
+def split_qkv_into_heads(q, k, v, num_heads):
+    """
+    Reshape and transpose the Q, K, V tensors into multi-head form.
+
+    Args:
+        q (torch.Tensor): Query tensor of shape (B, L, d_model).
+        k (torch.Tensor): Key tensor of shape (B, L, d_model).
+        v (torch.Tensor): Value tensor of shape (B, L, d_model).
+        num_heads (int): Number of attention heads.
+
+    Returns:
+        tuple[torch.Tensor, torch.Tensor, torch.Tensor]: 
+            Head-split tensors q_h, k_h, v_h, each of shape (B, num_heads, L, d_k).
+    """
+    # 1. Split the last dimension into (num_heads, d_k)
+    q_split = split_last_dim_into_heads(q, num_heads)
+    k_split = split_last_dim_into_heads(k, num_heads)
+    v_split = split_last_dim_into_heads(v, num_heads)
+    
+    # 2. Transpose to move the head axis before the sequence axis
+    q_h = transpose_heads_before_sequence(q_split)
+    k_h = transpose_heads_before_sequence(k_split)
+    v_h = transpose_heads_before_sequence(v_split)
+    
+    return q_h, k_h, v_h
 
 # Step 29 - multi_head_scaled_dot_product_attention (not yet solved)
 # TODO: implement
