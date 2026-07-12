@@ -132,8 +132,31 @@ def scale_embeddings_by_sqrt_d_model(embeddings, d_model):
     """
     return embeddings * math.sqrt(d_model)
 
-# Step 8 - compute_positional_div_term (not yet solved)
-# TODO: implement
+# Step 8 - compute_positional_div_term
+import torch
+import math
+
+def compute_positional_div_term(d_model):
+    """
+    Compute the frequency divisor vector for sinusoidal positional encoding.
+
+    Returns a 1D tensor of length d_model // 2 containing values
+    10000^{-2i/d_model} for i = 0, 1, ..., d_model//2 - 1.
+    These values are used as the argument multiplier inside sin and cos:
+        PE(pos, 2i)   = sin(pos * div_term[i])
+        PE(pos, 2i+1) = cos(pos * div_term[i])
+
+    Args:
+        d_model (int): Model dimension, must be even.
+
+    Returns:
+        torch.FloatTensor: Shape (d_model // 2,), dtype float32.
+    """
+    # Even indices: 0, 2, 4, ..., d_model-2
+    even_indices = torch.arange(0, d_model, 2, dtype=torch.float32)
+    # exp( even_indices * (-log(10000) / d_model) )
+    div_term = torch.exp(even_indices * (-math.log(10000.0) / d_model))
+    return div_term
 
 # Step 9 - build_position_index_column (not yet solved)
 # TODO: implement
