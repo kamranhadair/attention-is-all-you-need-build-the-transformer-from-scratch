@@ -174,8 +174,26 @@ def build_position_index_column(max_len):
     positions = torch.arange(max_len, dtype=torch.float32)
     return positions.view(-1, 1)
 
-# Step 10 - fill_even_indices_with_sin (not yet solved)
-# TODO: implement
+# Step 10 - fill_even_indices_with_sin
+import torch
+
+def fill_even_indices_with_sin(pe, position, div_term):
+    """
+    Fill the even-indexed columns of a positional encoding matrix with sine values.
+
+    Args:
+        pe (torch.Tensor): Positional encoding matrix of shape (L, D). Modified in-place.
+        position (torch.Tensor): Column vector of shape (L, 1) containing position indices.
+        div_term (torch.Tensor): Frequency divisor vector of shape (D/2,).
+
+    Returns:
+        torch.Tensor: The same tensor `pe` after updating its even columns.
+    """
+    # Broadcast: (L,1) * (D/2,) -> (L, D/2)
+    angles = position * div_term
+    # Assign sin values to even columns (0, 2, 4, ...)
+    pe[:, 0::2] = torch.sin(angles)
+    return pe
 
 # Step 11 - fill_odd_indices_with_cos (not yet solved)
 # TODO: implement
