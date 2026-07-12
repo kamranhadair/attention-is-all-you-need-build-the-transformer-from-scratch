@@ -421,8 +421,46 @@ def apply_attention_weights_to_values(attention_weights, value):
     # Batched matrix multiplication over the last two dimensions
     return torch.matmul(attention_weights, value)
 
-# Step 22 - scaled_dot_product_attention (not yet solved)
-# TODO: implement
+# Step 22 - scaled_dot_product_attention
+import torch
+
+def scaled_dot_product_attention(query, key, value, mask=None):
+    """
+    Compute Scaled Dot-Product Attention.
+    
+    Args:
+        query (torch.Tensor): Query tensor of shape (..., Lq, d_k).
+        key (torch.Tensor): Key tensor of shape (..., Lk, d_k).
+        value (torch.Tensor): Value tensor of shape (..., Lk, d_v).
+        mask (torch.Tensor, optional): Boolean mask broadcastable to 
+                                        (..., Lq, Lk). True = keep, False = block.
+                                        Defaults to None.
+
+    Returns:
+        tuple[torch.Tensor, torch.Tensor]: 
+            - context: Output tensor of shape (..., Lq, d_v).
+            - attention_weights: Attention weights of shape (..., Lq, Lk).
+    """
+    # Extract the per-head dimension d_k from the last axis of the query
+    d_k = query.shape[-1]
+    
+    # 1. Compute raw attention scores: (..., Lq, d_k) x (..., d_k, Lk) -> (..., Lq, Lk)
+    scores = compute_raw_attention_scores(query, key)
+    
+    # 2. Scale the scores by 1 / sqrt(d_k)
+    scores = scale_attention_scores(scores, d_k)
+    
+    # 3. Apply mask if provided (replaces blocked positions with -inf)
+    if mask is not None:
+        scores = mask_attention_scores_with_neg_inf(scores, mask)
+        
+    # 4. Apply softmax over the key axis to get attention weights
+    attn_weights = softmax_attention_weights(scores)
+    
+    # 5. Mix the value vectors according to the weights
+    context = apply_attention_weights_to_values(attn_weights, value)
+    
+    return context, attn_weights
 
 # Step 23 - split_last_dim_into_heads (not yet solved)
 # TODO: implement
