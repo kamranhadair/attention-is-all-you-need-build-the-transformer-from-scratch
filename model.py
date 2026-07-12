@@ -496,8 +496,28 @@ def transpose_heads_before_sequence(x):
     # Swap the sequence dimension (axis 1) and the head dimension (axis 2)
     return x.transpose(1, 2)
 
-# Step 25 - merge_heads_back_to_model_dim (not yet solved)
-# TODO: implement
+# Step 25 - merge_heads_back_to_model_dim
+import torch
+
+def merge_heads_back_to_model_dim(x):
+    """
+    Merge the head dimension back into the feature dimension, undoing the multi-head split.
+
+    Args:
+        x (torch.Tensor): Tensor of shape (B, num_heads, L, d_k).
+
+    Returns:
+        torch.Tensor: Contiguous tensor of shape (B, L, num_heads * d_k).
+    """
+    # 1. Swap the head and sequence axes: (B, H, L, d_k) -> (B, L, H, d_k)
+    x = x.transpose(1, 2)
+    
+    # 2. Make the tensor contiguous in memory so the reshape reads elements correctly
+    x = x.contiguous()
+    
+    # 3. Flatten the last two dimensions: (B, L, H, d_k) -> (B, L, H * d_k)
+    B, L, H, d_k = x.shape
+    return x.view(B, L, H * d_k)
 
 # Step 26 - apply_linear_projection (not yet solved)
 # TODO: implement
