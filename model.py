@@ -622,8 +622,28 @@ def multi_head_scaled_dot_product_attention(q_h, k_h, v_h, mask=None):
     # automatically broadcast over the batch and head dimensions.
     return scaled_dot_product_attention(q_h, k_h, v_h, mask)
 
-# Step 30 - merge_heads_and_project_output (not yet solved)
-# TODO: implement
+# Step 30 - merge_heads_and_project_output
+import torch
+
+def merge_heads_and_project_output(context, w_o, b_o):
+    """
+    Merge multi-head context vectors back to the model dimension and apply the output projection.
+
+    Args:
+        context (torch.Tensor): Per-head context tensor of shape (B, num_heads, L, d_k).
+        w_o (torch.Tensor): Output projection weight matrix of shape (d_model, d_model).
+        b_o (torch.Tensor): Output projection bias vector of shape (d_model,).
+
+    Returns:
+        torch.Tensor: Projected output tensor of shape (B, L, d_model).
+    """
+    # 1. Concatenate heads: (B, H, L, d_k) -> (B, L, d_model)
+    merged_context = merge_heads_back_to_model_dim(context)
+    
+    # 2. Apply the output linear projection
+    output = apply_linear_projection(merged_context, w_o, b_o)
+    
+    return output
 
 # Step 31 - assemble_multi_head_attention_forward (not yet solved)
 # TODO: implement
