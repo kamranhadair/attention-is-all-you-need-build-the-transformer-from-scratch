@@ -543,8 +543,32 @@ def apply_linear_projection(x, weight, bias):
         
     return output
 
-# Step 27 - project_to_query_key_value (not yet solved)
-# TODO: implement
+# Step 27 - project_to_query_key_value
+import torch
+
+def project_to_query_key_value(x, w_q, b_q, w_k, b_k, w_v, b_v):
+    """
+    Project the input tensor into query, key, and value tensors.
+
+    Args:
+        x (torch.Tensor): Input tensor of shape (B, L, d_model).
+        w_q (torch.Tensor): Weight matrix for query projection, shape (d_model, d_model).
+        b_q (torch.Tensor): Bias vector for query projection, shape (d_model,).
+        w_k (torch.Tensor): Weight matrix for key projection, shape (d_model, d_model).
+        b_k (torch.Tensor): Bias vector for key projection, shape (d_model,).
+        w_v (torch.Tensor): Weight matrix for value projection, shape (d_model, d_model).
+        b_v (torch.Tensor): Bias vector for value projection, shape (d_model,).
+
+    Returns:
+        tuple[torch.Tensor, torch.Tensor, torch.Tensor]: 
+            Query, Key, and Value tensors, each of shape (B, L, d_model).
+    """
+    # Apply independent linear projections to the original input x
+    q = apply_linear_projection(x, w_q, b_q)
+    k = apply_linear_projection(x, w_k, b_k)
+    v = apply_linear_projection(x, w_v, b_v)
+    
+    return q, k, v
 
 # Step 28 - split_qkv_into_heads (not yet solved)
 # TODO: implement
