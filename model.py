@@ -39,8 +39,25 @@ def build_id_to_token_vocab(token_to_id):
     """
     return {id_: token for token, id_ in token_to_id.items()}
 
-# Step 3 - encode_sentence_to_ids (not yet solved)
-# TODO: implement
+# Step 3 - encode_sentence_to_ids
+def encode_sentence_to_ids(sentence, token_to_id, unk_token='<unk>'):
+    """
+    Convert a whitespace-tokenized sentence into a list of integer token ids.
+
+    Args:
+        sentence (str): Input sentence, tokens separated by whitespace.
+        token_to_id (dict[str, int]): Mapping from token strings to ids.
+                                      Must contain an entry for `unk_token`.
+        unk_token (str, optional): The token string used for unknown tokens.
+                                   Defaults to '<unk>'.
+
+    Returns:
+        list[int]: List of ids corresponding to the tokens in order.
+                   Out-of-vocabulary tokens are mapped to the id of `unk_token`.
+    """
+    # Look up the id of the special unknown token.
+    unk_id = token_to_id[unk_token]
+    return [token_to_id.get(token, unk_id) for token in sentence.split()]
 
 # Step 4 - decode_ids_to_tokens (not yet solved)
 # TODO: implement
