@@ -379,8 +379,30 @@ def mask_attention_scores_with_neg_inf(scores, mask):
     # Invert the mask so True corresponds to positions we want to fill with -inf
     return scores.masked_fill(~mask, float('-inf'))
 
-# Step 20 - softmax_attention_weights (not yet solved)
-# TODO: implement
+# Step 20 - softmax_attention_weights
+import torch
+import torch.nn.functional as F
+
+def softmax_attention_weights(scores):
+    """
+    Convert masked attention scores into attention weights using softmax.
+
+    Args:
+        scores (torch.Tensor): Attention scores of shape (..., Lq, Lk), 
+                               potentially containing -inf for masked positions.
+
+    Returns:
+        torch.Tensor: Attention weights of shape (..., Lq, Lk). Non-negative entries 
+                      that sum to 1 along the last axis. Fully masked rows yield all zeros.
+    """
+    # Apply standard softmax along the last dimension (key positions)
+    attn_weights = F.softmax(scores, dim=-1)
+    
+    # Handle rows that are entirely masked (-inf). 
+    # Softmax of all -inf results in 0/0 = NaN. We replace these NaNs with 0.0.
+    attn_weights = torch.nan_to_num(attn_weights, nan=0.0)
+    
+    return attn_weights
 
 # Step 21 - apply_attention_weights_to_values (not yet solved)
 # TODO: implement
