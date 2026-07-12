@@ -343,8 +343,22 @@ def compute_raw_attention_scores(query, key):
     # then perform batched matrix multiplication with query
     return torch.matmul(query, key.transpose(-2, -1))
 
-# Step 18 - scale_attention_scores (not yet solved)
-# TODO: implement
+# Step 18 - scale_attention_scores
+import math
+import torch
+
+def scale_attention_scores(scores, d_k):
+    """
+    Scale raw attention scores by the square root of the per-head dimension d_k.
+
+    Args:
+        scores (torch.Tensor): Raw attention scores of shape (..., Lq, Lk).
+        d_k (int): The dimensionality of the keys/queries per head.
+
+    Returns:
+        torch.Tensor: Scaled attention scores of the same shape (..., Lq, Lk).
+    """
+    return scores / math.sqrt(d_k)
 
 # Step 19 - mask_attention_scores_with_neg_inf (not yet solved)
 # TODO: implement
