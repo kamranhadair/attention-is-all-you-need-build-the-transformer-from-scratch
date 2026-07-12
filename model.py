@@ -360,8 +360,24 @@ def scale_attention_scores(scores, d_k):
     """
     return scores / math.sqrt(d_k)
 
-# Step 19 - mask_attention_scores_with_neg_inf (not yet solved)
-# TODO: implement
+# Step 19 - mask_attention_scores_with_neg_inf
+import torch
+
+def mask_attention_scores_with_neg_inf(scores, mask):
+    """
+    Apply a boolean mask to attention scores, replacing blocked positions with -inf.
+
+    Args:
+        scores (torch.Tensor): Attention scores of shape (..., Lq, Lk).
+        mask (torch.Tensor): Boolean mask broadcastable to scores shape. 
+                             True = keep, False = block.
+
+    Returns:
+        torch.Tensor: A new tensor where blocked positions are -inf and kept positions 
+                      retain their original score.
+    """
+    # Invert the mask so True corresponds to positions we want to fill with -inf
+    return scores.masked_fill(~mask, float('-inf'))
 
 # Step 20 - softmax_attention_weights (not yet solved)
 # TODO: implement
