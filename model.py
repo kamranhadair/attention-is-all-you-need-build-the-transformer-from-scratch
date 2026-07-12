@@ -519,8 +519,29 @@ def merge_heads_back_to_model_dim(x):
     B, L, H, d_k = x.shape
     return x.view(B, L, H * d_k)
 
-# Step 26 - apply_linear_projection (not yet solved)
-# TODO: implement
+# Step 26 - apply_linear_projection
+import torch
+
+def apply_linear_projection(x, weight, bias):
+    """
+    Apply a standard linear projection y = xW^T + b.
+
+    Args:
+        x (torch.Tensor): Input tensor of shape (..., in_features).
+        weight (torch.Tensor): Weight matrix of shape (out_features, in_features).
+        bias (torch.Tensor | None): Bias vector of shape (out_features,), or None.
+
+    Returns:
+        torch.Tensor: Projected tensor of shape (..., out_features).
+    """
+    # Matrix multiply input by the transpose of the weight matrix
+    output = x @ weight.T
+    
+    # Add bias if it is provided
+    if bias is not None:
+        output = output + bias
+        
+    return output
 
 # Step 27 - project_to_query_key_value (not yet solved)
 # TODO: implement
