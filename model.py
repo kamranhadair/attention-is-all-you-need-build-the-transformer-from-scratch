@@ -113,8 +113,24 @@ def stack_padded_sequences_to_batch(padded_sequences):
     """
     return torch.tensor(padded_sequences, dtype=torch.long)
 
-# Step 7 - scale_embeddings_by_sqrt_d_model (not yet solved)
-# TODO: implement
+# Step 7 - scale_embeddings_by_sqrt_d_model
+import math
+
+def scale_embeddings_by_sqrt_d_model(embeddings, d_model):
+    """
+    Scale token embeddings by the square root of the model dimension.
+
+    This replicates the preprocessing step from the original Transformer paper,
+    where embeddings are multiplied by √d_model before adding positional encodings.
+
+    Args:
+        embeddings (torch.Tensor): Token embeddings, shape (..., d_model).
+        d_model (int): Model dimension (last dimension of embeddings).
+
+    Returns:
+        torch.Tensor: Scaled embeddings, same shape and dtype as input.
+    """
+    return embeddings * math.sqrt(d_model)
 
 # Step 8 - compute_positional_div_term (not yet solved)
 # TODO: implement
