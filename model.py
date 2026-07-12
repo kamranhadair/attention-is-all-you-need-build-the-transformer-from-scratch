@@ -245,8 +245,26 @@ def build_sinusoidal_positional_encoding(max_len, d_model):
 
     return pe
 
-# Step 13 - add_positional_encoding_to_embeddings (not yet solved)
-# TODO: implement
+# Step 13 - add_positional_encoding_to_embeddings
+import torch
+
+def add_positional_encoding_to_embeddings(embeddings, positional_encoding):
+    """
+    Add sinusoidal positional encodings to a batch of token embeddings.
+
+    Args:
+        embeddings (torch.Tensor): Token embeddings of shape (B, L, d_model).
+        positional_encoding (torch.Tensor): Precomputed positional encoding table
+                                            of shape (max_len, d_model), with max_len >= L.
+
+    Returns:
+        torch.Tensor: Embeddings with positional encodings added, shape (B, L, d_model).
+    """
+    L = embeddings.shape[1]
+    # Take only the rows needed for the current sequence length
+    pe_slice = positional_encoding[:L]   # shape (L, d_model)
+    # Broadcasting adds the same positional pattern to every batch element
+    return embeddings + pe_slice
 
 # Step 14 - build_padding_mask (not yet solved)
 # TODO: implement
