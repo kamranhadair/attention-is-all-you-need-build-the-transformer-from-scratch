@@ -325,8 +325,23 @@ def combine_padding_and_causal_masks(padding_mask, causal_mask):
     # Logical AND automatically broadcasts (B, 1, 1, L) & (1, 1, L, L) -> (B, 1, L, L)
     return padding_mask & causal_mask
 
-# Step 17 - compute_raw_attention_scores (not yet solved)
-# TODO: implement
+# Step 17 - compute_raw_attention_scores
+import torch
+
+def compute_raw_attention_scores(query, key):
+    """
+    Compute the raw attention score matrix via matrix multiplication.
+
+    Args:
+        query (torch.Tensor): Tensor of shape (..., Lq, d_k).
+        key (torch.Tensor): Tensor of shape (..., Lk, d_k).
+
+    Returns:
+        torch.Tensor: Raw attention scores of shape (..., Lq, Lk).
+    """
+    # Transpose the last two dimensions of the key tensor to get (..., d_k, Lk)
+    # then perform batched matrix multiplication with query
+    return torch.matmul(query, key.transpose(-2, -1))
 
 # Step 18 - scale_attention_scores (not yet solved)
 # TODO: implement
