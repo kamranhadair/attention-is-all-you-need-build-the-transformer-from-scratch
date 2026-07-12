@@ -480,8 +480,21 @@ def split_last_dim_into_heads(x, num_heads):
     d_k = d_model // num_heads
     return x.reshape(B, L, num_heads, d_k)
 
-# Step 24 - transpose_heads_before_sequence (not yet solved)
-# TODO: implement
+# Step 24 - transpose_heads_before_sequence
+import torch
+
+def transpose_heads_before_sequence(x):
+    """
+    Swap the head and sequence axes for multi-head attention.
+
+    Args:
+        x (torch.Tensor): Head-split tensor of shape (B, L, num_heads, d_k).
+
+    Returns:
+        torch.Tensor: Transposed tensor of shape (B, num_heads, L, d_k).
+    """
+    # Swap the sequence dimension (axis 1) and the head dimension (axis 2)
+    return x.transpose(1, 2)
 
 # Step 25 - merge_heads_back_to_model_dim (not yet solved)
 # TODO: implement
