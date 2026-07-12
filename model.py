@@ -599,8 +599,28 @@ def split_qkv_into_heads(q, k, v, num_heads):
     
     return q_h, k_h, v_h
 
-# Step 29 - multi_head_scaled_dot_product_attention (not yet solved)
-# TODO: implement
+# Step 29 - multi_head_scaled_dot_product_attention
+import torch
+
+def multi_head_scaled_dot_product_attention(q_h, k_h, v_h, mask=None):
+    """
+    Run scaled dot-product attention on multi-head formatted tensors.
+
+    Args:
+        q_h (torch.Tensor): Multi-head query tensor of shape (B, num_heads, Lq, d_k).
+        k_h (torch.Tensor): Multi-head key tensor of shape (B, num_heads, Lk, d_k).
+        v_h (torch.Tensor): Multi-head value tensor of shape (B, num_heads, Lk, d_v).
+        mask (torch.Tensor, optional): Boolean mask broadcastable to (B, num_heads, Lq, Lk).
+                                       True = keep, False = block. Defaults to None.
+
+    Returns:
+        tuple[torch.Tensor, torch.Tensor]: 
+            - context: Output tensor of shape (B, num_heads, Lq, d_v).
+            - attention_weights: Attention weights of shape (B, num_heads, Lq, Lk).
+    """
+    # Reuse the standard scaled dot-product attention; matmul and softmax 
+    # automatically broadcast over the batch and head dimensions.
+    return scaled_dot_product_attention(q_h, k_h, v_h, mask)
 
 # Step 30 - merge_heads_and_project_output (not yet solved)
 # TODO: implement
