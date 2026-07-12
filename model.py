@@ -266,8 +266,26 @@ def add_positional_encoding_to_embeddings(embeddings, positional_encoding):
     # Broadcasting adds the same positional pattern to every batch element
     return embeddings + pe_slice
 
-# Step 14 - build_padding_mask (not yet solved)
-# TODO: implement
+# Step 14 - build_padding_mask
+import torch
+
+def build_padding_mask(ids, pad_id):
+    """
+    Create a padding mask from a batch of token ids.
+
+    Args:
+        ids (torch.Tensor): LongTensor of token ids with shape (B, L).
+        pad_id (int): The token id designated for padding.
+
+    Returns:
+        torch.Tensor: A boolean tensor of shape (B, 1, 1, L) where True indicates
+                      a real content token and False indicates a padding token.
+    """
+    # Create a boolean mask where True means "not padding"
+    mask = (ids != pad_id)
+    
+    # Reshape to (B, 1, 1, L) for broadcasting with multi-head attention scores (B, H, L_q, L_k)
+    return mask.unsqueeze(1).unsqueeze(2)
 
 # Step 15 - build_causal_mask (not yet solved)
 # TODO: implement
