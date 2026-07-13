@@ -1311,8 +1311,13 @@ def compute_token_accuracy_ignoring_pad(log_probabilities, gold_token_ids, pad_i
     correct = (predictions == gold_token_ids) & non_pad_mask
     return correct.sum().to(torch.float32) / num_non_pad.to(torch.float32)
 
-# Step 64 - initialize_adam_optimizer_state (not yet solved)
-# TODO: implement
+# Step 64 - initialize_adam_optimizer_state
+import torch
+
+def initialize_adam_optimizer_state(params):
+    m = [torch.zeros_like(p, requires_grad=False) for p in params]
+    v = [torch.zeros_like(p, requires_grad=False) for p in params]
+    return {'m': m, 'v': v, 't': 0}
 
 # Step 65 - update_adam_first_moment (not yet solved)
 # TODO: implement
