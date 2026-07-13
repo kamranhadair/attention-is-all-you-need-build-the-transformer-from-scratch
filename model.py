@@ -1242,8 +1242,13 @@ def collect_model_parameters_into_list(encoder_layers, decoder_layers, embedding
 
     return result
 
-# Step 56 - shift_targets_right_with_start_token (not yet solved)
-# TODO: implement
+# Step 56 - shift_targets_right_with_start_token
+import torch
+
+def shift_targets_right_with_start_token(target_ids, start_token_id):
+    shifted = torch.full_like(target_ids, start_token_id)
+    shifted[:, 1:] = target_ids[:, :-1]
+    return shifted
 
 # Step 57 - compute_noam_learning_rate (not yet solved)
 # TODO: implement
