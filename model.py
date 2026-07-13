@@ -898,8 +898,30 @@ def decoder_layer_masked_self_attention_sublayer(
     )
     return apply_residual_add_and_norm(y, attn_output, gamma, beta)
 
-# Step 44 - decoder_layer_cross_attention_sublayer (not yet solved)
-# TODO: implement
+# Step 44 - decoder_layer_cross_attention_sublayer
+def decoder_layer_cross_attention_sublayer(
+    y, encoder_output, W_q, W_k, W_v, W_o, gamma, beta, num_heads, src_mask
+):
+    """Second sublayer of a decoder block: cross-attention + add & norm.
+
+    y: (B, Tgt, d_model) -- decoder hidden state, provides the query
+    encoder_output: (B, Tsrc, d_model) -- provides key and value
+    W_q, W_k, W_v, W_o: (d_model, d_model) attention projection weights
+    gamma, beta: (d_model,) layer norm affine parameters
+    num_heads: number of attention heads
+    src_mask: padding mask over source positions. Accepts either a
+        (B, Tsrc) per-batch mask or something already broadcastable to
+        (B, H, Tgt, Tsrc); a 2D mask is reshaped to (B, 1, 1, Tsrc) so it
+        broadcasts across heads and query positions.
+    returns: (B, Tgt, d_model)
+    """
+    if src_mask is not None and src_mask.dim() == 2:
+        src_mask = src_mask.unsqueeze(1).unsqueeze(1)  # (B, 1, 1, Tsrc)
+
+    attn_output = assemble_multi_head_attention_forward(
+        y, encoder_output, encoder_output, W_q, W_k, W_v, W_o, num_heads, src_mask
+    )
+    return apply_residual_add_and_norm(y, attn_output, gamma, beta)
 
 # Step 45 - decoder_layer_feed_forward_sublayer (not yet solved)
 # TODO: implement
