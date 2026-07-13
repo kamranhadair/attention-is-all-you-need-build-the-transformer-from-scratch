@@ -1053,8 +1053,59 @@ def apply_log_softmax_over_vocab(logits):
     """
     return F.log_softmax(logits, dim=-1)
 
-# Step 51 - run_transformer_forward (not yet solved)
-# TODO: implement
+# Step 51 - run_transformer_forward
+import torch
+
+
+def run_transformer_forward(src_ids, tgt_ids, model_params, num_heads, pad_id):
+    """Full encoder-decoder Transformer forward pass.
+
+    src_ids: (B, Tsrc) LongTensor of source token ids
+    tgt_ids: (B, Tgt) LongTensor of target token ids
+    model_params: dict with keys
+        token_embedding    -- (vocab_size, d_model), shared for src and tgt lookup
+        encoder_layers      -- list of per-layer param dicts for the encoder
+        decoder_layers       -- list of per-layer param dicts for the decoder
+        output_projection    -- (vocab_size, d_model)
+    num_heads: number of attention heads
+    pad_id: token id used for padding, used to build masks
+    returns: (B, Tgt, vocab_size) log probabilities over the vocabulary
+    """
+    token_embedding = model_params["token_embedding"]
+    d_model = token_embedding.shape[1]
+    max_len = max(src_ids.shape[1], tgt_ids.shape[1])
+
+    # Shared sinusoidal positional encoding table, sliced per sequence length.
+    pe = build_sinusoidal_positional_encoding(max_len, d_model)
+
+    # 1. Embed source and target, scale, and add positional encoding.
+    src_emb = token_embedding[src_ids]  # (B, Tsrc, d_model)
+    src_emb = scale_embeddings_by_sqrt_d_model(src_emb, d_model)
+    src_emb = add_positional_encoding_to_embeddings(src_emb, pe)
+
+    tgt_emb = token_embedding[tgt_ids]  # (B, Tgt, d_model)
+    tgt_emb = scale_embeddings_by_sqrt_d_model(tgt_emb, d_model)
+    tgt_emb = add_positional_encoding_to_embeddings(tgt_emb, pe)
+
+    # 2. Build masks.
+    src_mask = build_padding_mask(src_ids, pad_id)             # (B, 1, 1, Tsrc)
+    tgt_padding_mask = build_padding_mask(tgt_ids, pad_id)      # (B, 1, 1, Tgt)
+    causal_mask = build_causal_mask(tgt_ids.shape[1])           # (1, 1, Tgt, Tgt)
+    tgt_mask = combine_padding_and_causal_masks(tgt_padding_mask, causal_mask)  # (B, 1, Tgt, Tgt)
+
+    # 3. Run encoder and decoder stacks.
+    encoder_output = stack_encoder_layers(
+        src_emb, model_params["encoder_layers"], num_heads, src_mask
+    )
+    decoder_output = stack_decoder_layers(
+        tgt_emb, encoder_output, model_params["decoder_layers"], num_heads, src_mask, tgt_mask
+    )
+
+    # 4. Project to vocabulary logits and take log-softmax.
+    logits = apply_final_output_projection(decoder_output, model_params["output_projection"])
+    log_probs = apply_log_softmax_over_vocab(logits)
+
+    return log_probs
 
 # Step 52 - init_encoder_layer_parameters (not yet solved)
 # TODO: implement
