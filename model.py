@@ -1219,8 +1219,28 @@ def init_embedding_and_projection_parameters(vocab_size, d_model, tie_weights=Tr
 
     return params
 
-# Step 55 - collect_model_parameters_into_list (not yet solved)
-# TODO: implement
+# Step 55 - collect_model_parameters_into_list
+def collect_model_parameters_into_list(encoder_layers, decoder_layers, embedding_params):
+    seen_ids = set()
+    result = []
+
+    def add_tensor(t):
+        if id(t) not in seen_ids:
+            seen_ids.add(id(t))
+            result.append(t)
+
+    for layer in encoder_layers:
+        for tensor in layer.values():
+            add_tensor(tensor)
+
+    for layer in decoder_layers:
+        for tensor in layer.values():
+            add_tensor(tensor)
+
+    for tensor in embedding_params.values():
+        add_tensor(tensor)
+
+    return result
 
 # Step 56 - shift_targets_right_with_start_token (not yet solved)
 # TODO: implement
