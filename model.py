@@ -1195,8 +1195,29 @@ def init_decoder_layer_parameters(d_model, num_heads, d_ff):
 
     return params
 
-# Step 54 - init_embedding_and_projection_parameters (not yet solved)
-# TODO: implement
+# Step 54 - init_embedding_and_projection_parameters
+import torch
+import math
+
+def init_embedding_and_projection_parameters(vocab_size, d_model, tie_weights=True):
+    def randn_param(rows, cols):
+        # Scale by 1/sqrt(fan_in) for a sensible spread (Xavier-like init)
+        scale = 1.0 / math.sqrt(cols)
+        t = torch.randn(rows, cols, dtype=torch.float32) * scale
+        t.requires_grad_(True)
+        return t
+
+    params = {}
+
+    params['src_embedding'] = randn_param(vocab_size, d_model)
+    params['tgt_embedding'] = randn_param(vocab_size, d_model)
+
+    if tie_weights:
+        params['output_projection'] = params['tgt_embedding']
+    else:
+        params['output_projection'] = randn_param(vocab_size, d_model)
+
+    return params
 
 # Step 55 - collect_model_parameters_into_list (not yet solved)
 # TODO: implement
