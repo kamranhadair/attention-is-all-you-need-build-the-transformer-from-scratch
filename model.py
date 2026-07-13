@@ -781,8 +781,17 @@ def apply_residual_add_and_norm(residual_input, sublayer_output, gamma, beta, ep
     summed = residual_input + sublayer_output
     return normalize_and_scale_with_gamma_beta(summed, gamma, beta, eps)
 
-# Step 38 - apply_dropout_with_keep_mask (not yet solved)
-# TODO: implement
+# Step 38 - apply_dropout_with_keep_mask
+def apply_dropout_with_keep_mask(x, keep_mask, keep_prob):
+    """Inverted dropout using a caller-supplied deterministic keep mask.
+
+    x: any shape
+    keep_mask: boolean, broadcastable to x's shape (True = keep)
+    keep_prob: scalar probability that a unit is kept
+    returns: x with dropped positions zeroed and survivors rescaled by 1/keep_prob
+    """
+    mask = keep_mask.to(x.dtype)
+    return x * mask / keep_prob
 
 # Step 39 - encoder_layer_self_attention_sublayer (not yet solved)
 # TODO: implement
