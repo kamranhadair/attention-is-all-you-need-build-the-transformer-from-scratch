@@ -1319,8 +1319,13 @@ def initialize_adam_optimizer_state(params):
     v = [torch.zeros_like(p, requires_grad=False) for p in params]
     return {'m': m, 'v': v, 't': 0}
 
-# Step 65 - update_adam_first_moment (not yet solved)
-# TODO: implement
+# Step 65 - update_adam_first_moment
+import torch
+
+def update_adam_first_moment(m_prev, grad, beta1):
+    with torch.no_grad():
+        m_new = beta1 * m_prev + (1 - beta1) * grad
+    return m_new.detach()
 
 # Step 66 - update_adam_second_moment (not yet solved)
 # TODO: implement
