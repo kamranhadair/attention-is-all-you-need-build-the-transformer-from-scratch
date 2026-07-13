@@ -1283,8 +1283,12 @@ def zero_pad_column_and_pad_token_rows(distribution, gold_token_ids, pad_id):
     result[pad_mask] = 0.0
     return result
 
-# Step 61 - compute_label_smoothed_kl_loss (not yet solved)
-# TODO: implement
+# Step 61 - compute_label_smoothed_kl_loss
+import torch
+
+def compute_label_smoothed_kl_loss(log_probabilities, smoothed_distribution):
+    loss = -(smoothed_distribution * log_probabilities).sum()
+    return loss + 0.0  # normalize -0.0 to 0.0
 
 # Step 62 - average_loss_over_non_pad_tokens (not yet solved)
 # TODO: implement
