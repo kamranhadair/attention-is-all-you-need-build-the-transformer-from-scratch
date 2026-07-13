@@ -997,8 +997,26 @@ def assemble_decoder_layer(y, encoder_output, layer_params, num_heads, src_mask,
 
     return h3
 
-# Step 47 - stack_decoder_layers (not yet solved)
-# TODO: implement
+# Step 47 - stack_decoder_layers
+def stack_decoder_layers(y, encoder_output, decoder_layer_params_list, num_heads, src_mask, tgt_mask):
+    """Full Transformer decoder: sequentially apply each decoder layer.
+
+    y: (B, Tgt, d_model) -- the initial target-side hidden state
+    encoder_output: (B, Tsrc, d_model) -- shared across all layers
+    decoder_layer_params_list: list of per-layer param dicts, one per layer,
+        each matching the `layer_params` shape expected by
+        assemble_decoder_layer
+    num_heads: number of attention heads, shared across all layers
+    src_mask: source padding mask, shared across all layers (cross-attention)
+    tgt_mask: causal (plus padding) mask, shared across all layers (self-attention)
+    returns: (B, Tgt, d_model) -- the final hidden state after all layers
+    """
+    hidden = y
+    for layer_params in decoder_layer_params_list:
+        hidden = assemble_decoder_layer(
+            hidden, encoder_output, layer_params, num_heads, src_mask, tgt_mask
+        )
+    return hidden
 
 # Step 48 - apply_final_output_projection (not yet solved)
 # TODO: implement
