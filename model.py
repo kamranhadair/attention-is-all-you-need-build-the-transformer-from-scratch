@@ -793,8 +793,23 @@ def apply_dropout_with_keep_mask(x, keep_mask, keep_prob):
     mask = keep_mask.to(x.dtype)
     return x * mask / keep_prob
 
-# Step 39 - encoder_layer_self_attention_sublayer (not yet solved)
-# TODO: implement
+# Step 39 - encoder_layer_self_attention_sublayer
+def encoder_layer_self_attention_sublayer(
+    x, W_q, W_k, W_v, W_o, gamma, beta, num_heads, mask
+):
+    """First sublayer of an encoder block: self-attention + add & norm.
+
+    x: (B, T, d_model)
+    W_q, W_k, W_v, W_o: (d_model, d_model) attention projection weights
+    gamma, beta: (d_model,) layer norm affine parameters
+    num_heads: number of attention heads
+    mask: optional source padding mask, broadcastable to (B, H, T, T)
+    returns: (B, T, d_model)
+    """
+    attn_output = assemble_multi_head_attention_forward(
+        x, x, x, W_q, W_k, W_v, W_o, num_heads, mask
+    )
+    return apply_residual_add_and_norm(x, attn_output, gamma, beta)
 
 # Step 40 - encoder_layer_feed_forward_sublayer (not yet solved)
 # TODO: implement
