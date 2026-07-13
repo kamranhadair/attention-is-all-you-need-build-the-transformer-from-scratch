@@ -1018,8 +1018,16 @@ def stack_decoder_layers(y, encoder_output, decoder_layer_params_list, num_heads
         )
     return hidden
 
-# Step 48 - apply_final_output_projection (not yet solved)
-# TODO: implement
+# Step 48 - apply_final_output_projection
+def apply_final_output_projection(decoder_output, W_proj, b_proj=None):
+    """Map decoder hidden states to unnormalized vocabulary logits.
+
+    decoder_output: (B, Tgt, d_model)
+    W_proj: (vocab_size, d_model) -- output projection weight
+    b_proj: optional (vocab_size,) -- output projection bias
+    returns: (B, Tgt, vocab_size)
+    """
+    return apply_linear_projection(decoder_output, W_proj, b_proj)
 
 # Step 49 - tie_output_projection_to_token_embeddings (not yet solved)
 # TODO: implement
