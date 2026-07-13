@@ -723,8 +723,21 @@ def apply_ffn_second_linear(hidden, w2, b2):
     """
     return hidden @ w2 + b2
 
-# Step 34 - position_wise_feed_forward_network (not yet solved)
-# TODO: implement
+# Step 34 - position_wise_feed_forward_network
+def position_wise_feed_forward_network(x, w1, b1, w2, b2):
+    """Position-wise feed-forward sublayer: two linears with ReLU between.
+
+    FFN(x) = ReLU(x @ w1 + b1) @ w2 + b2, applied independently at
+    every (batch, seq) position.
+
+    x:  (B, T, d_model)
+    w1: (d_model, d_ff), b1: (d_ff,)
+    w2: (d_ff, d_model), b2: (d_model,)
+    returns: (B, T, d_model)
+    """
+    hidden = apply_ffn_first_linear_and_relu(x, w1, b1)
+    output = apply_ffn_second_linear(hidden, w2, b2)
+    return output
 
 # Step 35 - compute_layer_norm_mean_and_variance (not yet solved)
 # TODO: implement
