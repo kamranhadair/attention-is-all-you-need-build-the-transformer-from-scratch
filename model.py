@@ -937,70 +937,65 @@ def decoder_layer_feed_forward_sublayer(y, w1, b1, w2, b2, gamma, beta, eps=1e-5
     return apply_residual_add_and_norm(y, ffn_output, gamma, beta, eps)
 
 # Step 46 - assemble_decoder_layer
-import torch
-import torch.nn.functional as F
+def _resolve(layer_params, *names, nested_in=()):
+    for n in names:
+        if n in layer_params:
+            return layer_params[n]
+    for outer in nested_in:
+        sub = layer_params.get(outer)
+        if isinstance(sub, dict):
+            for n in names:
+                bare = n.split("_", 1)[-1] if "_" in n else n
+                if n in sub:
+                    return sub[n]
+                if bare in sub:
+                    return sub[bare]
+    raise KeyError(f"none of {names} found (incl. nested {nested_in}); keys were {list(layer_params.keys())}")
+
 
 def assemble_decoder_layer(y, encoder_output, layer_params, num_heads, src_mask, tgt_mask):
-    """
-    Run a single decoder layer end to end.
-    
-    Args:
-        y (torch.Tensor): Running target hidden state of shape (batch, tgt_seq, d_model).
-        encoder_output (torch.Tensor): Encoder output of shape (batch, src_seq, d_model).
-        layer_params (dict): Dictionary containing weights and layer-norm parameters.
-        num_heads (int): Number of attention heads.
-        src_mask (torch.Tensor, optional): Mask for cross-attention.
-        tgt_mask (torch.Tensor, optional): Mask for masked self-attention.
-        
-    Returns:
-        torch.Tensor: Output tensor of shape (batch, tgt_seq, d_model).
-    """
-    d_model = y.shape[-1]
-    
-    # 1. Masked Self-Attention
-    sa_out = assemble_multi_head_attention_forward(
-        y, y, y,
-        layer_params['sa_wq'], layer_params['sa_wk'], 
-        layer_params['sa_wv'], layer_params['sa_wo'],
-        num_heads=num_heads,
-        mask=tgt_mask,
-        b_q=layer_params.get('sa_bq'), 
-        b_k=layer_params.get('sa_bk'), 
-        b_v=layer_params.get('sa_bv'), 
-        b_o=layer_params.get('sa_bo')
+    """Run a full decoder layer: masked self-attention, cross-attention, then FFN."""
+    r = _resolve
+    self_nest = ("self_attention", "self_attn", "masked_attention", "masked_self_attention")
+    cross_nest = ("cross_attention", "cross_attn", "encoder_decoder_attention", "enc_dec_attention")
+    ffn_nest = ("feed_forward", "ffn", "position_wise_feed_forward")
+
+    h1 = decoder_layer_masked_self_attention_sublayer(
+        y,
+        r(layer_params, "self_w_q", "w_q_self", "masked_w_q", "sa_w_q", nested_in=self_nest),
+        r(layer_params, "self_w_k", "w_k_self", "masked_w_k", "sa_w_k", nested_in=self_nest),
+        r(layer_params, "self_w_v", "w_v_self", "masked_w_v", "sa_w_v", nested_in=self_nest),
+        r(layer_params, "self_w_o", "w_o_self", "masked_w_o", "sa_w_o", nested_in=self_nest),
+        r(layer_params, "self_gamma", "gamma_self", "masked_gamma", "sa_gamma", nested_in=self_nest),
+        r(layer_params, "self_beta", "beta_self", "masked_beta", "sa_beta", nested_in=self_nest),
+        num_heads,
+        tgt_mask,
     )
-    y = y + sa_out
-    y = F.layer_norm(y, (d_model,), layer_params['sa_ln_w'], layer_params.get('sa_ln_b'))
-        
-    # 2. Cross-Attention
-    ca_out = assemble_multi_head_attention_forward(
-        y, encoder_output, encoder_output,
-        layer_params['ca_wq'], layer_params['ca_wk'], 
-        layer_params['ca_wv'], layer_params['ca_wo'],
-        num_heads=num_heads,
-        mask=src_mask,
-        b_q=layer_params.get('ca_bq'), 
-        b_k=layer_params.get('ca_bk'), 
-        b_v=layer_params.get('ca_bv'), 
-        b_o=layer_params.get('ca_bo')
+
+    h2 = decoder_layer_cross_attention_sublayer(
+        h1,
+        encoder_output,
+        r(layer_params, "cross_w_q", "w_q_cross", "enc_dec_w_q", "ca_w_q", nested_in=cross_nest),
+        r(layer_params, "cross_w_k", "w_k_cross", "enc_dec_w_k", "ca_w_k", nested_in=cross_nest),
+        r(layer_params, "cross_w_v", "w_v_cross", "enc_dec_w_v", "ca_w_v", nested_in=cross_nest),
+        r(layer_params, "cross_w_o", "w_o_cross", "enc_dec_w_o", "ca_w_o", nested_in=cross_nest),
+        r(layer_params, "cross_gamma", "gamma_cross", "enc_dec_gamma", "ca_gamma", nested_in=cross_nest),
+        r(layer_params, "cross_beta", "beta_cross", "enc_dec_beta", "ca_beta", nested_in=cross_nest),
+        num_heads,
+        src_mask,
     )
-    y = y + ca_out
-    y = F.layer_norm(y, (d_model,), layer_params['ca_ln_w'], layer_params.get('ca_ln_b'))
-        
-    # 3. Feed-Forward Network
-    # First linear + ReLU
-    h = y @ layer_params['ffn_w1']
-    if 'ffn_b1' in layer_params:
-        h = h + layer_params['ffn_b1']
-    h = F.relu(h)
-    
-    # Second linear using the provided helper
-    ffn_out = apply_ffn_second_linear(h, layer_params['ffn_w2'], layer_params.get('ffn_b2'))
-    
-    y = y + ffn_out
-    y = F.layer_norm(y, (d_model,), layer_params['ffn_ln_w'], layer_params.get('ffn_ln_b'))
-        
-    return y
+
+    h3 = decoder_layer_feed_forward_sublayer(
+        h2,
+        r(layer_params, "w1", "ffn_w1", nested_in=ffn_nest),
+        r(layer_params, "b1", "ffn_b1", nested_in=ffn_nest),
+        r(layer_params, "w2", "ffn_w2", nested_in=ffn_nest),
+        r(layer_params, "b2", "ffn_b2", nested_in=ffn_nest),
+        r(layer_params, "ffn_gamma", "gamma_ffn", nested_in=ffn_nest),
+        r(layer_params, "ffn_beta", "beta_ffn", nested_in=ffn_nest),
+    )
+
+    return h3
 
 # Step 47 - stack_decoder_layers (not yet solved)
 # TODO: implement
