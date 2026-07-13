@@ -1107,8 +1107,45 @@ def run_transformer_forward(src_ids, tgt_ids, model_params, num_heads, pad_id):
 
     return log_probs
 
-# Step 52 - init_encoder_layer_parameters (not yet solved)
-# TODO: implement
+# Step 52 - init_encoder_layer_parameters
+import torch
+import math
+
+def init_encoder_layer_parameters(d_model, num_heads, d_ff):
+    def randn_param(rows, cols):
+        # Scale by 1/sqrt(fan_in) for a sensible spread (Xavier-like init)
+        scale = 1.0 / math.sqrt(rows)
+        t = torch.randn(rows, cols, dtype=torch.float32) * scale
+        t.requires_grad_(True)
+        return t
+
+    def zeros_param(*shape):
+        return torch.zeros(*shape, dtype=torch.float32, requires_grad=True)
+
+    def ones_param(*shape):
+        return torch.ones(*shape, dtype=torch.float32, requires_grad=True)
+
+    params = {}
+
+    # Self-attention projection matrices (no bias)
+    params['w_q'] = randn_param(d_model, d_model)
+    params['w_k'] = randn_param(d_model, d_model)
+    params['w_v'] = randn_param(d_model, d_model)
+    params['w_o'] = randn_param(d_model, d_model)
+
+    # Feed-forward weights and biases
+    params['w1'] = randn_param(d_model, d_ff)
+    params['b1'] = zeros_param(d_ff)
+    params['w2'] = randn_param(d_ff, d_model)
+    params['b2'] = zeros_param(d_model)
+
+    # LayerNorm gain/shift vectors
+    params['attn_gamma'] = ones_param(d_model)
+    params['attn_beta'] = zeros_param(d_model)
+    params['ffn_gamma'] = ones_param(d_model)
+    params['ffn_beta'] = zeros_param(d_model)
+
+    return params
 
 # Step 53 - init_decoder_layer_parameters (not yet solved)
 # TODO: implement
