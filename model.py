@@ -824,8 +824,43 @@ def encoder_layer_feed_forward_sublayer(x, w1, b1, w2, b2, gamma, beta, eps=1e-5
     ffn_output = position_wise_feed_forward_network(x, w1, b1, w2, b2)
     return apply_residual_add_and_norm(x, ffn_output, gamma, beta, eps)
 
-# Step 41 - assemble_encoder_layer (not yet solved)
-# TODO: implement
+# Step 41 - assemble_encoder_layer
+def assemble_encoder_layer(x, layer_params, num_heads, src_mask=None):
+    """Complete encoder layer: self-attention sublayer -> feed-forward sublayer.
+
+    x: (B, T, d_model)
+    layer_params: dict with keys
+        w_q, w_k, w_v, w_o           -- attention projection weights
+        attn_gamma, attn_beta        -- layer norm params for attention sublayer
+        w1, b1, w2, b2               -- feed-forward network weights
+        ffn_gamma, ffn_beta          -- layer norm params for FFN sublayer
+    num_heads: number of attention heads
+    src_mask: optional source padding mask for self-attention
+    returns: (B, T, d_model)
+    """
+    h = encoder_layer_self_attention_sublayer(
+        x,
+        layer_params["w_q"],
+        layer_params["w_k"],
+        layer_params["w_v"],
+        layer_params["w_o"],
+        layer_params["attn_gamma"],
+        layer_params["attn_beta"],
+        num_heads,
+        src_mask,
+    )
+
+    y = encoder_layer_feed_forward_sublayer(
+        h,
+        layer_params["w1"],
+        layer_params["b1"],
+        layer_params["w2"],
+        layer_params["b2"],
+        layer_params["ffn_gamma"],
+        layer_params["ffn_beta"],
+    )
+
+    return y
 
 # Step 42 - stack_encoder_layers (not yet solved)
 # TODO: implement
