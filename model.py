@@ -726,8 +726,22 @@ def assemble_multi_head_attention_forward(
 
     return output
 
-# Step 32 - apply_ffn_first_linear_and_relu (not yet solved)
-# TODO: implement
+# Step 32 - apply_ffn_first_linear_and_relu
+import torch
+
+
+def apply_ffn_first_linear_and_relu(x, w1, b1):
+    """First half of the position-wise feed-forward network.
+
+    Projects from d_model up to d_ff and applies ReLU, independently
+    at every (batch, seq) position.
+
+    x:  (B, T, d_model)
+    w1: (d_model, d_ff)  -- applied directly, no transpose needed
+    b1: (d_ff,)
+    returns: (B, T, d_ff)
+    """
+    return torch.relu(x @ w1 + b1)
 
 # Step 33 - apply_ffn_second_linear (not yet solved)
 # TODO: implement
