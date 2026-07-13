@@ -811,8 +811,18 @@ def encoder_layer_self_attention_sublayer(
     )
     return apply_residual_add_and_norm(x, attn_output, gamma, beta)
 
-# Step 40 - encoder_layer_feed_forward_sublayer (not yet solved)
-# TODO: implement
+# Step 40 - encoder_layer_feed_forward_sublayer
+def encoder_layer_feed_forward_sublayer(x, w1, b1, w2, b2, gamma, beta, eps=1e-5):
+    """Second sublayer of an encoder block: position-wise FFN + add & norm.
+
+    x: (B, T, d_model)
+    w1: (d_model, d_ff), b1: (d_ff,)
+    w2: (d_ff, d_model), b2: (d_model,)
+    gamma, beta: (d_model,) layer norm affine parameters
+    returns: (B, T, d_model)
+    """
+    ffn_output = position_wise_feed_forward_network(x, w1, b1, w2, b2)
+    return apply_residual_add_and_norm(x, ffn_output, gamma, beta, eps)
 
 # Step 41 - assemble_encoder_layer (not yet solved)
 # TODO: implement
