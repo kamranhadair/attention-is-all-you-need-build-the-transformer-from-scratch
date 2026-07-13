@@ -862,8 +862,22 @@ def assemble_encoder_layer(x, layer_params, num_heads, src_mask=None):
 
     return y
 
-# Step 42 - stack_encoder_layers (not yet solved)
-# TODO: implement
+# Step 42 - stack_encoder_layers
+def stack_encoder_layers(x, encoder_layer_params_list, num_heads, src_mask=None):
+    """Full Transformer encoder: sequentially apply each encoder layer.
+
+    x: (B, T, d_model) -- the initial hidden state
+    encoder_layer_params_list: list of per-layer param dicts, one per layer,
+        each matching the `layer_params` shape expected by
+        assemble_encoder_layer
+    num_heads: number of attention heads, shared across all layers
+    src_mask: optional source padding mask, shared across all layers
+    returns: (B, T, d_model) -- the final hidden state after all layers
+    """
+    hidden = x
+    for layer_params in encoder_layer_params_list:
+        hidden = assemble_encoder_layer(hidden, layer_params, num_heads, src_mask)
+    return hidden
 
 # Step 43 - decoder_layer_masked_self_attention_sublayer (not yet solved)
 # TODO: implement
