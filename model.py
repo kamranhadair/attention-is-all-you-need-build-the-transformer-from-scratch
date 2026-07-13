@@ -645,8 +645,86 @@ def merge_heads_and_project_output(context, w_o, b_o):
     
     return output
 
-# Step 31 - assemble_multi_head_attention_forward (not yet solved)
-# TODO: implement
+# Step 31 - assemble_multi_head_attention_forward
+import torch
+import torch.nn.functional as F
+import math
+
+
+def project_to_query_key_value(x_q, x_k, x_v, W_q, W_k, W_v):
+    """Linear-project query input and key/value input with their own weights.
+
+    x_q: (B, Tq, D) -- query source (may differ from key/value source)
+    x_k, x_v: (B, Tk, D) -- key/value source (typically x_k is x_v)
+    """
+    Q = x_q @ W_q
+    K = x_k @ W_k
+    V = x_v @ W_v
+    return Q, K, V
+
+
+def split_qkv_into_heads(Q, K, V, num_heads):
+    """Reshape (B, T, D) tensors into per-head views (B, H, T, d_k)."""
+    def _split(x):
+        B, T, D = x.shape
+        d_k = D // num_heads
+        return x.view(B, T, num_heads, d_k).transpose(1, 2)  # (B, H, T, d_k)
+
+    return _split(Q), _split(K), _split(V)
+
+
+def scaled_dot_product_attention(Q, K, V, mask=None):
+    """Standard scaled dot-product attention over the last two dims.
+
+    Q: (B, H, Tq, d_k), K, V: (B, H, Tk, d_k)
+    mask: broadcastable to (B, H, Tq, Tk); positions where mask == 0 are masked out.
+    """
+    d_k = Q.size(-1)
+    scores = (Q @ K.transpose(-2, -1)) / math.sqrt(d_k)  # (B, H, Tq, Tk)
+
+    if mask is not None:
+        scores = scores.masked_fill(mask == 0, float("-inf"))
+
+    attn = F.softmax(scores, dim=-1)
+    context = attn @ V  # (B, H, Tq, d_k)
+    return context
+
+
+def merge_heads_and_project_output(context, W_o):
+    """Merge (B, H, Tq, d_k) heads back to (B, Tq, D) and apply output projection."""
+    B, H, Tq, d_k = context.shape
+    merged = context.transpose(1, 2).contiguous().view(B, Tq, H * d_k)  # (B, Tq, D)
+    return merged @ W_o
+
+
+def assemble_multi_head_attention_forward(
+    query, key, value, W_q, W_k, W_v, W_o, num_heads, mask=None
+):
+    """Full multi-head attention forward pass.
+
+    Supports self-attention (query is key is value) and cross-attention
+    (query comes from a different sequence than key/value), plus an
+    optional broadcastable attention mask.
+
+    query: (B, Tq, D)
+    key, value: (B, Tk, D)  -- key and value share the same source sequence
+    W_q, W_k, W_v, W_o: (D, D) projection matrices
+    num_heads: H, must divide D
+    mask: optional, broadcastable to (B, H, Tq, Tk)
+    """
+    # 1. Project query from its own source; key/value from theirs (may differ).
+    Q, K, V = project_to_query_key_value(query, key, value, W_q, W_k, W_v)
+
+    # 2. Reshape into per-head views.
+    Qh, Kh, Vh = split_qkv_into_heads(Q, K, V, num_heads)
+
+    # 3. Scaled dot-product attention across all heads at once.
+    context = scaled_dot_product_attention(Qh, Kh, Vh, mask)
+
+    # 4. Merge heads back together and apply the output projection.
+    output = merge_heads_and_project_output(context, W_o)
+
+    return output
 
 # Step 32 - apply_ffn_first_linear_and_relu (not yet solved)
 # TODO: implement
