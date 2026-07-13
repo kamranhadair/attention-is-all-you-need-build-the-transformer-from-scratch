@@ -1029,8 +1029,16 @@ def apply_final_output_projection(decoder_output, W_proj, b_proj=None):
     """
     return apply_linear_projection(decoder_output, W_proj, b_proj)
 
-# Step 49 - tie_output_projection_to_token_embeddings (not yet solved)
-# TODO: implement
+# Step 49 - tie_output_projection_to_token_embeddings
+def tie_output_projection_to_token_embeddings(token_embedding):
+    """Return an output projection weight tied to the token embedding matrix.
+
+    token_embedding: (vocab_size, d_model)
+    returns: (d_model, vocab_size) -- a view sharing storage with
+        token_embedding, so in-place edits to either are reflected in
+        the other (weight tying, as in the original Transformer paper).
+    """
+    return token_embedding.t()
 
 # Step 50 - apply_log_softmax_over_vocab (not yet solved)
 # TODO: implement
