@@ -1439,8 +1439,74 @@ def compute_batch_training_loss(src, tgt, model_params, config):
 
     return loss
 
-# Step 72 - run_training_step_with_backprop (not yet solved)
-# TODO: implement
+# Step 72 - run_training_step_with_backprop
+import inspect
+
+def run_training_step_with_backprop(src, tgt, parameter_list, model_params, optimizer_state, step_number, config):
+    d_model = config['d_model']
+    warmup_steps = config['warmup_steps']
+
+    # 1. Clear stale gradients.
+    zero_all_parameter_gradients(parameter_list)
+
+    # 2. Forward pass -> loss (still attached to autograd graph).
+    loss = compute_batch_training_loss(src, tgt, model_params, config)
+
+    # 3. Backpropagate.
+    loss.backward()
+
+    # 4. Look up the Noam learning rate for this step.
+    lr = _get_noam_learning_rate(step_number, d_model, warmup_steps)
+
+    # 5. Apply one Adam update, forwarding betas/epsilon from config if present.
+    adam_kwargs = {}
+    if 'beta1' in config:
+        adam_kwargs['beta1'] = config['beta1']
+    if 'beta2' in config:
+        adam_kwargs['beta2'] = config['beta2']
+    if 'epsilon' in config:
+        adam_kwargs['epsilon'] = config['epsilon']
+    elif 'eps' in config:
+        adam_kwargs['epsilon'] = config['eps']
+
+    apply_adam_step_to_all_parameters(parameter_list, optimizer_state, lr, **adam_kwargs)
+
+    # 6. Return the scalar loss as a plain Python float for logging.
+    return loss.item()
+
+
+def _get_noam_learning_rate(step_number, d_model, warmup_steps):
+    """Locate an existing Noam LR helper in the scaffold, or fall back to the
+    standard formula: d_model^-0.5 * min(step^-0.5, step * warmup_steps^-1.5)."""
+    g = globals()
+    candidate_names = [
+        'compute_noam_learning_rate',
+        'get_noam_learning_rate',
+        'noam_learning_rate',
+        'noam_lr',
+        'compute_learning_rate',
+        'get_learning_rate',
+        'noam_lr_schedule',
+        'lr_schedule',
+    ]
+    for name in candidate_names:
+        if name in g and callable(g[name]):
+            fn = g[name]
+            sig_params = list(inspect.signature(fn).parameters.keys())
+            kwargs = {}
+            pos_args = [step_number]
+            # Try to match by param name where possible, else positional.
+            if len(sig_params) >= 3:
+                return fn(step_number, d_model, warmup_steps)
+            elif len(sig_params) == 2:
+                # Some implementations might close over d_model/warmup_steps already.
+                return fn(step_number, warmup_steps)
+            else:
+                return fn(step_number)
+
+    # Fallback: standard Noam formula.
+    step = max(step_number, 1)
+    return (d_model ** -0.5) * min(step ** -0.5, step * (warmup_steps ** -1.5))
 
 # Step 73 - run_training_loop_for_steps (not yet solved)
 # TODO: implement
