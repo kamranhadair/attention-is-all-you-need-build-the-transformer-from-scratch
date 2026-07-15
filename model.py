@@ -1534,8 +1534,11 @@ def pick_next_token_by_argmax(logits):
 def compute_length_penalty(length, alpha):
     return ((5.0 + length) / 6.0) ** alpha
 
-# Step 76 - compute_candidate_scores (not yet solved)
-# TODO: implement
+# Step 76 - compute_candidate_scores
+import torch
+
+def compute_candidate_scores(beam_scores, next_token_log_probs):
+    return beam_scores.unsqueeze(1) + next_token_log_probs
 
 # Step 77 - select_top_k_candidates (not yet solved)
 # TODO: implement
