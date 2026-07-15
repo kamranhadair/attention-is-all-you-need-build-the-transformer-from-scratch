@@ -1508,8 +1508,21 @@ def _get_noam_learning_rate(step_number, d_model, warmup_steps):
     step = max(step_number, 1)
     return (d_model ** -0.5) * min(step ** -0.5, step * (warmup_steps ** -1.5))
 
-# Step 73 - run_training_loop_for_steps (not yet solved)
-# TODO: implement
+# Step 73 - run_training_loop_for_steps
+def run_training_loop_for_steps(batches, parameter_list, model_params, optimizer_state, num_steps, config):
+    losses = []
+    num_batches = len(batches)
+
+    for i in range(num_steps):
+        step_number = i + 1  # Noam schedule requires step_number to start at 1.
+        src, tgt = batches[i % num_batches]  # cycle through batches as needed.
+
+        loss = run_training_step_with_backprop(
+            src, tgt, parameter_list, model_params, optimizer_state, step_number, config
+        )
+        losses.append(loss)
+
+    return losses
 
 # Step 74 - pick_next_token_by_argmax (not yet solved)
 # TODO: implement
