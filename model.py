@@ -1380,8 +1380,64 @@ def zero_all_parameter_gradients(params):
     for p in params:
         p.grad = None
 
-# Step 71 - compute_batch_training_loss (not yet solved)
-# TODO: implement
+# Step 71 - compute_batch_training_loss
+import torch
+import torch.nn.functional as F
+import inspect
+
+def compute_batch_training_loss(src, tgt, model_params, config):
+    pad_id = config['pad_id']
+    start_id = config['start_id']
+    vocab_size = config['vocab_size']
+    smoothing = config['smoothing']
+    num_heads = config['num_heads']
+
+    batch_size, seq_len = tgt.shape
+
+    # Shift target right: prepend start_id, drop last gold token.
+    start_col = torch.full((batch_size, 1), start_id, dtype=tgt.dtype, device=tgt.device)
+    tgt_input = torch.cat([start_col, tgt[:, :-1]], dim=1)
+
+    # Ensure model_params has a 'token_embedding' key pointing at the SAME tensor
+    # object as whatever it's actually called, so gradients populate on
+    # model_params['token_embedding'] after backward().
+    if isinstance(model_params, dict) and 'token_embedding' not in model_params:
+        alias_candidates = ['tok_embedding', 'token_emb', 'tok_emb', 'embedding',
+                             'word_embedding', 'src_embedding', 'input_embedding',
+                             'emb', 'embed']
+        for alt in alias_candidates:
+            if alt in model_params:
+                model_params['token_embedding'] = model_params[alt]  # same tensor, not a copy
+                break
+
+    forward_fn = run_transformer_forward
+    sig_params = list(inspect.signature(forward_fn).parameters.keys())
+    call_kwargs = {}
+    if 'num_heads' in sig_params:
+        call_kwargs['num_heads'] = num_heads
+    if 'pad_id' in sig_params:
+        call_kwargs['pad_id'] = pad_id
+
+    logits = forward_fn(src, tgt_input, model_params, **call_kwargs)
+    # logits: [batch, seq_len, vocab_size]
+
+    log_probs = F.log_softmax(logits, dim=-1)
+
+    with torch.no_grad():
+        true_dist = torch.full_like(log_probs, smoothing / (vocab_size - 2))
+        true_dist.scatter_(2, tgt.unsqueeze(2), 1.0 - smoothing)
+        true_dist[:, :, pad_id] = 0.0
+
+        pad_mask = (tgt == pad_id)
+        true_dist.masked_fill_(pad_mask.unsqueeze(2), 0.0)
+
+    loss_per_token = F.kl_div(log_probs, true_dist, reduction='none').sum(dim=-1)
+
+    non_pad_mask = (~pad_mask).float()
+    num_non_pad = non_pad_mask.sum()
+    loss = (loss_per_token * non_pad_mask).sum() / num_non_pad
+
+    return loss
 
 # Step 72 - run_training_step_with_backprop (not yet solved)
 # TODO: implement
